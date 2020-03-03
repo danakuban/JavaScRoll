@@ -21,8 +21,7 @@ docJson.subscribe(function(err) {
     if (err) throw err;
     window.document.getElementById('root').innerHTML = jsonToDom(docJson.data);
 
-    docJson.on('op', function(op, source) {
-        docJson.data = json.type.apply(docJson.data, op);
+    docJson.on('op', function() {
         window.document.getElementById('root').innerHTML = jsonToDom(docJson.data);
     });
 
@@ -33,7 +32,6 @@ docJson.subscribe(function(err) {
         mutations.forEach(mutation => {
             let index;
             if (mutation.target === window.document.getElementById("root")) return; // updated by this code
-            console.log(mutation);
             if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                 console.log("node was added");
                 const path = [];
@@ -52,7 +50,6 @@ docJson.subscribe(function(err) {
                         }
                     });
                     path.push(index);
-                    console.log(path.toString());
                     docJson.submitOp({p: path, "li": newNode});
                 } else if (addedNode.previousElementSibling != null) {
                     console.log("there is a previous sibling");
@@ -65,9 +62,8 @@ docJson.subscribe(function(err) {
                     path.push(index);
                     docJson.submitOp({p: path, "li": newNode});
                 } else {
-                    console.log("there is a no sibling");
+                    console.log("there is no sibling");
                     const op = {p: path, "od": [], "oi": [newNode]};
-                    console.log(op);
                     docJson.submitOp(op);
                 }
                 // <div id="4">hello</div>
@@ -76,23 +72,21 @@ docJson.subscribe(function(err) {
                 // otherwise the node is only a document fragment and we cannot access the parent node
                 console.log("node was removed");
                 const path = searchJsonForKey(docJson.data, mutation.removedNodes[0].id, []);
-                console.log(path.toString());
                 index = path.reduce((o, n) => o[n], docJson.data).findIndex(function(item, i){
-                    for(const prop in item) {
+                    for (const prop in item) {
                         return prop === mutation.removedNodes[0].id
                     }
                 });
                 path.push(index);
                 let op = {p: path, ld: path.reduce((o, n) => o[n], docJson.data)};
-                console.log(op);
                 docJson.submitOp(op);
             }
-        })
+        });
     });
 
     // define what element should be observed by the observer
     // and what types of mutations trigger the callback
-    observer.observe(document, {
+    observer.observe(document.getElementById("root"), {
         subtree: true,
         attributes: true,
         characterData: true,
