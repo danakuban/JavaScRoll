@@ -96,6 +96,19 @@ docJson.subscribe(function (err) {
                 let op = {p: path, ld: path.reduce((o, n) => o[n], docJson.data)};
                 docJson.submitOp(op);
             }
+            if (mutation.type === "attributes" && mutation.attributeName === "class") {
+                console.log("class attribute was added");
+                let path = [getIndex(mutation.target), mutation.target.id];
+                let node = mutation.target;
+                while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
+                    path.unshift(node.id, "children");
+                    if (node.id !== 'root') path.unshift(getIndex(node));
+                }
+                // TODO: add class instead of override
+                path.push("class");
+                let op = {p: path, oi:mutation.target.className};
+                docJson.submitOp(op);
+            }
         });
     });
 
