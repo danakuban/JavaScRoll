@@ -7,16 +7,34 @@ var WebSocketJSONStream = require('@teamwork/websocket-json-stream');
 
 ShareDB.types.register(json.type);
 var backend = new ShareDB();
+ShareDB.logger.setMethods({
+    debug: () => console.log(arguments),
+    trace: () => console.log(arguments),
+    info: () => console.log(arguments),
+    warn: () => console.warn(arguments),
+    error: () => console.error(arguments)
+});
+// Create initial document then fire callback
 createDoc(startServer);
 
-// Create initial document then fire callback
 function createDoc(callback) {
     var connection = backend.connect();
-    var doc = connection.get('tree', 'json');
+    var docCounter = connection.get('json', 'counter');
+    docCounter.fetch(function(err) {
+        if (err) throw err;
+        if (docCounter.type === null) {
+            docCounter.create({counter: 7});
+        }
+    });
+    var doc = connection.get('json', 'tree');
     doc.fetch(function(err) {
         if (err) throw err;
         if (doc.type === null) {
-            doc.create({'0': {'type': 'div', 'children': [{'2': {'type': 'div', 'value': 'something', 'children': []}}, {'3': {'type': 'div', 'value': 'else', 'children': []}}]}}, callback);
+            doc.create({root: {type: 'ul', children: [
+                        {1: {type: 'li', children: [{4: {type: 'span', children: [], class: 'close', value:'x'}}], value: 'drink water'}},
+                        {2: {type: 'li', value: 'do sports', children: [{5: {type: 'span', children: [], class: 'close', value:'x'}}]}},
+                        {3: {type: 'li', value: 'do DA', children: [{6: {type: 'span', children: [], class: 'close', value:'x'}}]}}
+                    ]}}, callback);
             return;
         }
         callback();
