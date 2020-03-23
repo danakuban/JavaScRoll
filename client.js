@@ -1,26 +1,26 @@
-var ReconnectingWebSocket = require('reconnecting-websocket');
-var sharedb = require('sharedb/lib/client');
-var json = require('ot-json0');
+const ReconnectingWebSocket = require('reconnecting-websocket');
+const sharedb = require('sharedb/lib/client');
+const json = require('ot-json0');
 
 sharedb.types.register(json.type);
 
 // Open WebSocket connection to ShareDB server
-var socket = new ReconnectingWebSocket('ws://' + window.location.host);
-var connection = new sharedb.Connection(socket);
+const socket = new ReconnectingWebSocket('ws://' + window.location.host);
+const connection = new sharedb.Connection(socket);
 
 window.disconnect = function () {
     connection.close();
 };
 window.connect = function () {
-    var socket = new ReconnectingWebSocket('ws://' + window.location.host);
+    const socket = new ReconnectingWebSocket('ws://' + window.location.host);
     connection.bindToSocket(socket);
 };
 
 let docCounter = connection.get('json', 'counter');
 docCounter.subscribe();
 // TODO: we need somehow an atomic operation for get and increment
-increment = function() {
-    docCounter.submitOp([{p:['counter'], na:1}])
+increment = function () {
+    docCounter.submitOp([{p: ['counter'], na: 1}])
 };
 
 const docJson = connection.get('json', 'tree');
@@ -31,10 +31,11 @@ docJson.subscribe(function (err) {
     createCloseButtons();
     addCloseListener();
     addCheckedListener();
+    addDragAndDropListener();
 
     MutationObserver = window.MutationObserver;
 
-    const observer = new MutationObserver(function (mutations, observer) {
+    const observer = new MutationObserver(function (mutations) {
         // fired when a mutation occurs
         mutations.forEach(mutation => {
             console.log("mutation on target " + mutation.target.nodeName);
@@ -54,12 +55,13 @@ docJson.subscribe(function (err) {
                 newNode[addedNode.id] = {
                     'type': addedNode.nodeName,
                     'value': addedNode.firstChild.nodeValue,
-                    'children': []
+                    'children': [],
+                    'attributes': [{}]
                 };
-                if (addedNode.className !== "") newNode[addedNode.id]["class"] = addedNode.className;
+                if (addedNode.className !== "") newNode[addedNode.id]["attributes"][0]["class"] = addedNode.className;
                 if (addedNode.nextElementSibling != null) {
                     console.log("there is a next sibling");
-                    index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item, i) {
+                    index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                         for (const prop in item) {
                             return prop === addedNode.nextElementSibling.id
                         }
@@ -68,7 +70,7 @@ docJson.subscribe(function (err) {
                     docJson.submitOp({p: path, "li": newNode});
                 } else if (addedNode.previousElementSibling != null) {
                     console.log("there is a previous sibling");
-                    index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item, i) {
+                    index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                         for (const prop in item) {
                             return prop === addedNode.previousElementSibling.id
                         }
@@ -87,7 +89,7 @@ docJson.subscribe(function (err) {
                 // otherwise the node is only a document fragment and we cannot access the parent node
                 console.log("node was removed");
                 const path = searchJsonForKey(docJson.data, mutation.removedNodes[0].id, []);
-                index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item, i) {
+                index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                     for (const prop in item) {
                         return prop === mutation.removedNodes[0].id
                     }
@@ -97,23 +99,24 @@ docJson.subscribe(function (err) {
                 docJson.submitOp(op);
             }
             if (mutation.type === "attributes" && mutation.attributeName === "class") {
-                console.log("class attribute was added");
                 let path = [getIndex(mutation.target), mutation.target.id];
                 let node = mutation.target;
                 while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
                     path.unshift(node.id, "children");
                     if (node.id !== 'root') path.unshift(getIndex(node));
                 }
-                // TODO: add class instead of override
+                //TODO: create object if not present
+                path.push("attributes");
+                path.push(0);
                 path.push("class");
-                let op = {p: path, oi:mutation.target.className};
+                let op = {p: path, oi: mutation.target.className};
                 docJson.submitOp(op);
             }
         });
     });
 
-// define what element should be observed by the observer
-// and what types of mutations trigger the callback
+    // define what element should be observed by the observer
+    // and what types of mutations trigger the callback
     observer.observe(document.getElementById("entryPoint"), {
         subtree: true,
         attributes: true,
@@ -127,6 +130,7 @@ docJson.on('op', function () {
     window.document.getElementById('entryPoint').innerHTML = jsonToDom(docJson.data);
     addCheckedListener();
     addCloseListener();
+    addDragAndDropListener();
 });
 
 
@@ -172,12 +176,15 @@ function jsonToDom(json) {
     for (let id in json) {
         var type = json[id]["type"];
         xml = xml.concat("<", type, " id=\"", id.toString(), "\"");
-        if (json[id].hasOwnProperty("class")) {
-            xml = xml.concat(" class=\"", json[id]["class"], "\"");
+        if (json[id].hasOwnProperty("attributes") && json[id]["attributes"].length > 0) {
+            let attributes = json[id]["attributes"][0];
+            Object.keys(attributes).forEach(function (key) {
+                xml = xml.concat(" ", key, "=\"", attributes[key], "\"");
+            });
         }
         xml = xml.concat(">");
         if (json[id].hasOwnProperty("children")) {
-            for (var i = 0; i < json[id]["children"].length; i++) {
+            for (let i = 0; i < json[id]["children"].length; i++) {
                 xml = xml.concat(jsonToDom(json[id]["children"][i]));
             }
         }
@@ -186,6 +193,7 @@ function jsonToDom(json) {
         }
         xml = xml.concat("</", type, ">");
     }
+
     return xml;
 }
 
@@ -248,5 +256,53 @@ function addAddButtonListener() {
         createCloseButtons();
         addCloseListener();
         addCheckedListener();
+        addDragAndDropListener();
     });
+}
+
+// drag and drop
+var srcIndex = null;
+
+function handleDragStart(e) {
+    // store source index
+    srcIndex = getIndex(e.target);
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDrop(e) {
+    // this/e.target is current target element.
+    e.preventDefault();
+    if (e.stopPropagation) {
+        e.stopPropagation(); // Stops some browsers from redirecting.
+    }
+
+    // Don't do anything if dropping the same column we're dragging.
+    let targetIndex = getIndex(e.target);
+    if (srcIndex !== targetIndex) {
+        let node = e.target;
+        // switch to elements of the list by indexes.
+        let path = [];
+        while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
+            path.unshift(node.id, "children");
+            if (node.id !== 'root') path.unshift(getIndex(node));
+        }
+        path.push(srcIndex);
+        docJson.submitOp({p: path, lm: targetIndex});
+    }
+    return false;
+}
+
+function addDragAndDropListener() {
+    let list = document.querySelector('ul');
+    let entries = list.querySelectorAll('li');
+    entries.forEach(elem => {
+        elem.setAttribute("draggable", "true");
+        elem.addEventListener('dragstart', handleDragStart, false);
+        elem.addEventListener('dragover', function (event) {
+            event.preventDefault(); // Necessary. Allows us to drop.
+            event.dataTransfer.dropEffect = 'move';
+        });
+        elem.addEventListener('drop', handleDrop, false);
+    });
+    console.log("created dnd listener")
 }

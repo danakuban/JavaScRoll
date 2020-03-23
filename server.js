@@ -31,9 +31,9 @@ function createDoc(callback) {
         if (err) throw err;
         if (doc.type === null) {
             doc.create({root: {type: 'ul', children: [
-                        {1: {type: 'li', children: [{4: {type: 'span', children: [], class: 'close', value:'x'}}], value: 'drink water'}},
-                        {2: {type: 'li', value: 'do sports', children: [{5: {type: 'span', children: [], class: 'close', value:'x'}}]}},
-                        {3: {type: 'li', value: 'do DA', children: [{6: {type: 'span', children: [], class: 'close', value:'x'}}]}}
+                        {1: {type: 'li', attributes: [{}], children: [{4: {type: 'span', children: [], attributes:[{class: 'close'}], value:'x'}}], value: 'drink water'}},
+                        {2: {type: 'li', attributes: [{}], value: 'do sports', children: [{5: {type: 'span', children: [], attributes: [{class: 'close'}], value:'x'}}]}},
+                        {3: {type: 'li', attributes: [{}], value: 'do DA', children: [{6: {type: 'span', children: [], attributes: [{class: 'close'}], value:'x'}}]}}
                     ]}}, callback);
             return;
         }
