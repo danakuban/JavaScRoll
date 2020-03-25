@@ -17,6 +17,7 @@
   "dependencies": {
     "@teamwork/websocket-json-stream": "^2.0.0",
     "deltajs": "0.0.6",
+    "dom-parser": "^0.1.6",
     "express": "^4.17.1",
     "ot-json1": "^0.2.4",
     "reconnecting-websocket": "^4.2.0",
