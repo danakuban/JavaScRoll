@@ -72,8 +72,10 @@ function addAddButtonListener() {
 }
 
 // drag and drop
+var srcId = null;
 function handleDragStart(e) {
     // store source index
+    srcId = e.target.id;
     e.dataTransfer.effectAllowed = 'move';
 }
 
@@ -84,7 +86,10 @@ function handleDrop(e) {
         e.stopPropagation(); // Stops some browsers from redirecting.
     }
 
-    console.log("not yet implemented");
+    if (e.target.id !== srcId) {
+        client.moveListItemById(srcId, e.target.id);
+        console.log("moved something");
+    }
 }
 
 function addDragAndDropListener() {

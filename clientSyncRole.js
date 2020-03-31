@@ -13,9 +13,12 @@ class ClientSyncRole extends Role {
         this.srcIndex = null;
 
         // Open WebSocket connection to ShareDB server
-        this.connect();
+        this.connection = this.connect();
     }
 
+    /**
+     * @returns {Connection}
+     */
     connect() {
         const socket = new ReconnectingWebSocket('ws://' + window.location.host);
         const connection = new sharedb.Connection(socket);
@@ -138,15 +141,16 @@ class ClientSyncRole extends Role {
             window.document.getElementById('entryPoint').innerHTML = ClientSyncRole.jsonToDom(docJson.data);
             that.update(); //TODO: check if method available
         });
+
+        return connection;
     }
 
     /**
      * @returns {number}
      */
     static getIndex(el) {
-        let children = el.parentNode.childNodes,
-            i = 0;
-        for (; i < children.length; i++) {
+        let children = el.parentNode.childNodes;
+        for (let i = 0; i < children.length; i++) {
             if (children[i] === el) {
                 return i;
             }
@@ -201,6 +205,20 @@ class ClientSyncRole extends Role {
         }
 
         return xml;
+    }
+
+    moveListItemById(srcId, targetId) {
+        let path = [];
+        let node = document.getElementById(targetId);
+        while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
+            path.unshift(node.id, "children");
+            if (node.id !== 'root') path.unshift(ClientSyncRole.getIndex(node));
+        }
+        let srcIndex = ClientSyncRole.getIndex(document.getElementById(srcId));
+        let targetIndex = ClientSyncRole.getIndex(document.getElementById(targetId));
+        path.push(srcIndex);
+        const docJson = this.connection.get('json', 'tree');
+        docJson.submitOp({p: path, lm: targetIndex});
     }
 }
 
