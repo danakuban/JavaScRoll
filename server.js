@@ -3,7 +3,7 @@ const express = require('express');
 const DOMParser = require('dom-parser');
 const fs = require('fs');
 
-const Player = require('./player.js');
+const Player = require('./roleFramework/player.js');
 const ServerSyncRole = require('./serverSyncRole.js');
 
 class Server extends Player {

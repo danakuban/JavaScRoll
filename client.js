@@ -1,4 +1,4 @@
-const Player = require('./player.js');
+const Player = require('./roleFramework/player.js');
 const ClientSyncRole = require('./clientSyncRole.js');
 
 const client = new Player();

@@ -2,7 +2,7 @@ const ShareDB = require('sharedb');
 const WebSocket = require('ws');
 const WebSocketJSONStream = require('@teamwork/websocket-json-stream');
 const json = require('ot-json1');
-const Role = require("./role.js");
+const Role = require("./roleFramework/role.js");
 
 class ServerSyncRole extends Role {
 

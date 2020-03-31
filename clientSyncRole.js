@@ -2,7 +2,7 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 const sharedb = require('sharedb/lib/client');
 const json = require('ot-json0');
 
-const Role = require('./role.js');
+const Role = require('./roleFramework/role.js');
 
 class ClientSyncRole extends Role {
 

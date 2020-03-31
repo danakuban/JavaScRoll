@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "mkdir -p static/dist/ && ./node_modules/.bin/browserify *.js -o static/dist/bundle.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --reporter spec",
     "start": "node server.js",
     "buildAndStart": "npm run build && npm run start"
   },
@@ -16,9 +16,11 @@
   "license": "MIT",
   "dependencies": {
     "@teamwork/websocket-json-stream": "^2.0.0",
+    "chai": "^4.2.0",
     "deltajs": "0.0.6",
     "dom-parser": "^0.1.6",
     "express": "^4.17.1",
+    "mocha": "^7.1.1",
     "ot-json1": "^0.2.4",
     "reconnecting-websocket": "^4.2.0",
     "sharedb": "^1.0.0-beta",

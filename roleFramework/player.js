@@ -5,13 +5,12 @@ function enableNoSuchMethod(obj) {
                 return target[p];
             } else if (typeof target.__noSuchMethod__ === "function") {
                 //console.log(obj);
-                if (typeof(obj.player) !== "undefined") {
+                if (typeof(obj.player) !== "undefined" && obj.player != null) {
                     if (p in obj.player) {
                         return obj.player[p];
                     }
                 }
                 for (const role of obj.roles) {
-                    // todo: search in role's roles
                     if (p in role) {
                         return role[p];
                     }
@@ -32,6 +31,7 @@ class Player {
 
     plays(role) {
         this.drops(role);
+        if (role.compartment != null) role.compartment.validate(this, role);
         this.roles.push(role);
         role.player = this;
     }
@@ -39,19 +39,20 @@ class Player {
     drops(role) {
         console.log(role.name);
         this.roles = this.roles.filter(item => item !== role);
-        role.player = undefined;
+        role.player = null;
     }
 
     __noSuchMethod__(id, args) {
         console.log("tried to handle unknown method " + id);
         for (const role of this.roles) {
             try {
-                role[id](args);
                 console.log("found method " + id + " in role " + role.name)
+                return role[id](args);
             } catch (err) {
-                console.log("could not find a method with name " + id + " in any role of this object");
+                console.log("could not find a method with name " + id + " in role " + role.name);
             }
         }
+        throw new Error("could not find a method with id " + id + " and args " + args);
     };
 }
 
