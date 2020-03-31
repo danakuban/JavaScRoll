@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "mkdir -p static/dist/ && ./node_modules/.bin/browserify *.js -o static/dist/bundle.js",
-    "test": "mocha --reporter spec",
+    "test": "cd roleFramework && mocha --reporter spec",
     "start": "node server.js",
     "buildAndStart": "npm run build && npm run start"
   },
