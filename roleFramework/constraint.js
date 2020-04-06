@@ -1,4 +1,5 @@
 class Constraint {
+
     constructor() {
         if (this.constructor === Constraint) {
             throw new TypeError('Abstract class "Constraint" cannot be instantiated directly.');
@@ -19,7 +20,8 @@ class MethodImplementedConstraint extends Constraint {
 
     validate(player) {
         try {
-            player[this.method]()
+            if (player.hasOwnProperty(this.method)) return;
+            player.__noSuchMethod__(this.method);
         } catch(error) {
             throw new Error("player has no method " + this.method + " defined");
         }

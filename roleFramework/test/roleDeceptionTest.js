@@ -1,4 +1,4 @@
-const expect  = require("chai").expect;
+const expect = require("chai").expect;
 
 const Player = require('../player.js');
 const Role = require('../role.js');

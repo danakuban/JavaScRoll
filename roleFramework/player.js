@@ -24,6 +24,7 @@ function enableNoSuchMethod(obj) {
 }
 
 class Player {
+
     constructor() {
         this.roles = [];
         return enableNoSuchMethod(this);
@@ -46,7 +47,7 @@ class Player {
         console.log("tried to handle unknown method " + id);
         for (const role of this.roles) {
             try {
-                console.log("found method " + id + " in role " + role.name)
+                console.log("found method " + id + " in role " + role.name);
                 return role[id](args);
             } catch (err) {
                 console.log("could not find a method with name " + id + " in role " + role.name);

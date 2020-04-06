@@ -2,8 +2,8 @@ const Player = require('./roleFramework/player.js');
 const ClientSyncRole = require('./clientSyncRole.js');
 
 const client = new Player();
-const syncRole = new ClientSyncRole();
-client.plays(syncRole); //TODO: Constraint: has method update?
+client.plays(ClientSyncRole); //TODO: Constraint: has method update?
+client.connect();
 client.update = function() {
     createCloseButtons();
     addCloseListener();

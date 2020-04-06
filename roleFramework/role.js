@@ -1,13 +1,13 @@
 const Player = require('./player.js');
 
 class Role extends Player {
+
     constructor(name) {
         super();
         this.name = name;
         this.player = null;
         this.compartment = null;
     }
-    // ParentClass.prototype.myMethod.call(this, arg1, arg2, ..) * Hint: use apply() instead of call() to pass arguments as an array.
 
     __noSuchMethod__(id, args) {
         console.log("tried to handle unknown method " + id);
