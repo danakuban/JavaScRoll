@@ -3,17 +3,11 @@ const WebSocket = require('ws');
 const WebSocketJSONStream = require('@teamwork/websocket-json-stream');
 const json = require('ot-json1');
 const Role = require("./roleFramework/role");
-const Compartment = require("./roleFramework/compartment");
-const RoleGroup = require("./roleFramework/roleGroup");
-const Constraint = require("./roleFramework/constraint");
+const ServerSyncCompartment = require("./ServerSyncCompartment");
 
 ServerSyncRole = new Role("ServerSyncRole");
-ServerSyncComparment = new Compartment("ServerSyncCompartment");
-// TODO: in vererbtes Compartment auslagern
-ServerSyncComparment.addRole(ServerSyncRole);
-ServerSyncRoleGroup = new RoleGroup("ServerSyncRoleGroup", ServerSyncRole);
-ServerSyncComparment.addRoleGroup(ServerSyncRoleGroup);
-ServerSyncRoleGroup.addConstraint(new Constraint.MethodImplementedConstraint("startServer"));
+serverSyncCompartment = new ServerSyncCompartment();
+serverSyncCompartment.addRole(ServerSyncRole);
 
 ServerSyncRole.startSync = function () {
 

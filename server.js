@@ -4,7 +4,7 @@ const DOMParser = require('dom-parser');
 const fs = require('fs');
 
 const Player = require('./roleFramework/player.js');
-const ServerSyncRole = require('./serverSyncRole.js');
+let serverSyncRole = require('./serverSyncRole.js');
 
 const server = new Player();
 server.startServer = function() {
@@ -18,5 +18,5 @@ server.startServer = function() {
     return server;
 };
 
-server.plays(ServerSyncRole);
+server.plays(serverSyncRole);
 server.startSync();

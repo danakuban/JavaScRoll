@@ -1,5 +1,5 @@
 const Player = require('./roleFramework/player.js');
-const ClientSyncRole = require('./clientSyncRole.js');
+let ClientSyncRole = require('./clientSyncRole.js');
 
 const client = new Player();
 client.plays(ClientSyncRole); //TODO: Constraint: has method update?
@@ -64,10 +64,6 @@ function addAddButtonListener() {
             document.getElementById("root").appendChild(li);
         }
         document.getElementById("myInput").value = "";
-        createCloseButtons();
-        addCloseListener();
-        addCheckedListener();
-        addDragAndDropListener();
     });
 }
 

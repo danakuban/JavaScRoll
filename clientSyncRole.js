@@ -23,10 +23,6 @@ ClientSyncRole.connect = function () {
 
     let docCounter = this.connection.get('json', 'counter');
     docCounter.subscribe();
-    // TODO: we need somehow an atomic operation for get and increment
-    this.increment = function () {
-        docCounter.submitOp([{p: ['counter'], na: 1}])
-    };
 
     const docJson = this.connection.get('json', 'tree');
     var that = this;
@@ -40,11 +36,12 @@ ClientSyncRole.connect = function () {
         const observer = new MutationObserver(function (mutations) {
             // fired when a mutation occurs
             mutations.forEach(mutation => {
-                console.trace("mutation on target " + mutation.target.nodeName);
+                console.log("mutation on target " + mutation.target.nodeName);
                 let index;
                 if (mutation.target === window.document.getElementById("entryPoint")) return; // updated by this code
+                if (mutation.type === "attributes" && mutation.attributeName === "id") return; //ids should get only updated by this app
                 if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                    console.trace("node was added");
+                    console.log("node was added");
                     const path = [];
                     let addedNode = mutation.addedNodes[0];
                     let node = addedNode;
@@ -53,17 +50,23 @@ ClientSyncRole.connect = function () {
                         if (node.id !== 'root') path.unshift(getIndex(node));
                     }
                     const newNode = {};
-                    newNode[addedNode.id] = {
+                    let id = docCounter.data.counter;
+                    increment(docCounter);
+                    newNode[id] = {
                         'type': addedNode.nodeName,
                         'value': addedNode.firstChild.nodeValue,
                         'children': [],
                         'attributes': [{}]
                     };
-                    for (let attribute in addedNode.attributes) {
-                        newNode[addedNode.id]["attributes"][0][attribute] = addedNode.attributes[attribute];
+                    for (let attribute in addedNode.getAttributeNames()) {
+                        if (addedNode.getAttributeNode(attribute) == null) continue;
+                        console.log("added some attribute");
+                        newNode[id]["attributes"][0][attribute] = addedNode.getAttributeNode(attribute).value;
+                    }
+                    if (addedNode.className != null) {
+                        newNode[id]["attributes"][0]["class"] = addedNode.className;
                     }
                     if (addedNode.nextElementSibling != null) {
-                        console.trace("there is a next sibling");
                         index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                             for (const prop in item) {
                                 return prop === addedNode.nextElementSibling.id
@@ -72,7 +75,6 @@ ClientSyncRole.connect = function () {
                         path.push(index);
                         docJson.submitOp({p: path, "li": newNode});
                     } else if (addedNode.previousElementSibling != null) {
-                        console.trace("there is a previous sibling");
                         index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                             for (const prop in item) {
                                 return prop === addedNode.previousElementSibling.id
@@ -82,15 +84,13 @@ ClientSyncRole.connect = function () {
                         path.push(index);
                         docJson.submitOp({p: path, "li": newNode});
                     } else {
-                        console.trace("there is no sibling");
                         const op = {p: path, "od": [], "oi": [newNode]};
                         docJson.submitOp(op);
                     }
-                    // <div id="4">hello</div>
                 }
                 if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
                     // otherwise the node is only a document fragment and we cannot access the parent node
-                    console.trace("node was removed");
+                    console.log("node was removed");
                     const path = searchJsonForKey(docJson.data, mutation.removedNodes[0].id, []);
                     index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
                         for (const prop in item) {
@@ -102,6 +102,7 @@ ClientSyncRole.connect = function () {
                     docJson.submitOp(op);
                 }
                 if (mutation.type === "attributes") {
+                    console.log("add attribute " + mutation.attributeName + " to node  " + mutation.target.id);
                     let path = [getIndex(mutation.target), mutation.target.id];
                     let node = mutation.target;
                     while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
@@ -115,14 +116,13 @@ ClientSyncRole.connect = function () {
                     let attributeName = mutation.attributeName;
                     let attributeValue = mutation.target.getAttribute(attributeName);
                     if (attributes.hasOwnProperty(attributeName) && attributes[attributeName] === attributeValue) {
-                        console.trace("node has correct attribute");
+                        console.log("node has correct attribute");
                         return;
                     }
                     // todo: attribute might change
                     path.push(attributeName);
                     let op = {p: path, oi: attributeValue};
                     docJson.submitOp(op);
-                    console.log(docJson.data);
                 }
             });
         });
@@ -138,7 +138,6 @@ ClientSyncRole.connect = function () {
     });
 
     docJson.on('op', function () {
-        console.trace("received operation");
         window.document.getElementById('entryPoint').innerHTML = jsonToDom(docJson.data);
         try {
             that.update();
@@ -147,6 +146,15 @@ ClientSyncRole.connect = function () {
         }
     });
 };
+
+increment = function(docCounter) {
+    // TODO: we need somehow an atomic operation for get and increment
+    if (docCounter == null) {
+        console.error("docCounter was not initialized");
+        return;
+    }
+    docCounter.submitOp([{p: ['counter'], na: 1}])
+}
 
 /**
  * @returns {number}
