@@ -2,9 +2,12 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 const sharedb = require('sharedb/lib/client');
 const json = require('ot-json0');
 
+const ClientSyncCompartment = require('./clientSyncCompartment.js');
 const Role = require('./roleFramework/role.js');
 
 ClientSyncRole = new Role("ClientSyncRole");
+clientSyncCompartment = new ClientSyncCompartment();
+clientSyncCompartment.addRole(ClientSyncRole);
 // TODO: do we need a possibility to run some code in the moment the role is assigned to a player?
 ClientSyncRole.connect = function () {
     sharedb.types.register(json.type);
@@ -28,7 +31,8 @@ ClientSyncRole.connect = function () {
     var that = this;
     docJson.subscribe(function (err) {
         if (err) throw err;
-        window.document.getElementById('entryPoint').innerHTML = jsonToDom(docJson.data);
+        console.log(that.entryPoint);
+        window.document.getElementById(that.entryPoint).innerHTML = jsonToDom(docJson.data);
         that.update();
 
         MutationObserver = window.MutationObserver;
@@ -38,16 +42,20 @@ ClientSyncRole.connect = function () {
             mutations.forEach(mutation => {
                 console.log("mutation on target " + mutation.target.nodeName);
                 let index;
-                if (mutation.target === window.document.getElementById("entryPoint")) return; // updated by this code
+                if (mutation.target === window.document.getElementById(that.entryPoint)) return; // updated by this code
                 if (mutation.type === "attributes" && mutation.attributeName === "id") return; //ids should get only updated by this app
                 if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                     console.log("node was added");
                     const path = [];
                     let addedNode = mutation.addedNodes[0];
                     let node = addedNode;
-                    while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
+                    while ((node = node.parentNode) && (node.id !== that.entryPoint)) {
                         path.unshift(node.id, "children");
-                        if (node.id !== 'root') path.unshift(getIndex(node));
+                        if (node.parentNode != null && node.parentNode.id !== that.entryPoint) {
+                            path.unshift(getIndex(node));
+                        } else {
+                            console.log("parent of node " + node.id + " is entryPoint?");
+                        }
                     }
                     const newNode = {};
                     let id = docCounter.data.counter;
@@ -84,6 +92,7 @@ ClientSyncRole.connect = function () {
                         path.push(index);
                         docJson.submitOp({p: path, "li": newNode});
                     } else {
+                        // no sibling node
                         const op = {p: path, "od": [], "oi": [newNode]};
                         docJson.submitOp(op);
                     }
@@ -92,12 +101,6 @@ ClientSyncRole.connect = function () {
                     // otherwise the node is only a document fragment and we cannot access the parent node
                     console.log("node was removed");
                     const path = searchJsonForKey(docJson.data, mutation.removedNodes[0].id, []);
-                    index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
-                        for (const prop in item) {
-                            return prop === mutation.removedNodes[0].id
-                        }
-                    });
-                    path.push(index);
                     let op = {p: path, ld: path.reduce((o, n) => o[n], docJson.data)};
                     docJson.submitOp(op);
                 }
@@ -107,7 +110,7 @@ ClientSyncRole.connect = function () {
                     let node = mutation.target;
                     while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
                         path.unshift(node.id, "children");
-                        if (node.id !== 'root') path.unshift(getIndex(node));
+                        if (node.parentNode != null && node.parentNode.id !== that.entryPoint) path.unshift(getIndex(node));
                     }
                     //TODO: create object if not present
                     path.push("attributes");
@@ -138,6 +141,7 @@ ClientSyncRole.connect = function () {
     });
 
     docJson.on('op', function () {
+        console.log("received operation");
         window.document.getElementById('entryPoint').innerHTML = jsonToDom(docJson.data);
         try {
             that.update();
@@ -181,7 +185,9 @@ searchJsonForKey = function (json, key, path) {
             json = json[prop];
         }
         for (let i = 0; i < json["children"].length; i++) {
-            const result = searchJsonForKey(json["children"][i], key, path.slice());
+            let newPath = path.slice();
+            newPath.push(i);
+            const result = searchJsonForKey(json["children"][i], key, newPath);
             if (result != null) {
                 return result;
             }
@@ -224,7 +230,7 @@ ClientSyncRole.moveListItemById = function (srcId, targetId) {
     let node = document.getElementById(targetId);
     while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
         path.unshift(node.id, "children");
-        if (node.id !== 'root') path.unshift(getIndex(node));
+        if (node.parentNode != null && node.parentNode.id !== this.entryPoint) path.unshift(getIndex(node));
     }
     let srcIndex = getIndex(document.getElementById(srcId));
     let targetIndex = getIndex(document.getElementById(targetId));

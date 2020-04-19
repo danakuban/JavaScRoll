@@ -7,7 +7,7 @@ class ServerSyncCompartment extends Compartment {
     constructor() {
         super("ServerSyncCompartment");
         let roleGroup = new RoleGroup("ServerSyncRoleGroup");
-        roleGroup.addConstraint(new Constraint.MethodImplementedConstraint("startServer"))
+        roleGroup.addConstraint(new Constraint.MethodImplementedConstraint("startServer"));
         this.roleGroups.push(roleGroup);
     }
 

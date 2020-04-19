@@ -1,7 +1,5 @@
 const http = require('http');
 const express = require('express');
-const DOMParser = require('dom-parser');
-const fs = require('fs');
 
 const Player = require('./roleFramework/player.js');
 let serverSyncRole = require('./serverSyncRole.js');
@@ -17,6 +15,8 @@ server.startServer = function() {
     console.log('Listening on http://localhost:8080');
     return server;
 };
+
+server.initDomString = "<ul><li draggable='true'>drink water</li><li>do sports</li><li>do DA</li></ul>";
 
 server.plays(serverSyncRole);
 server.startSync();

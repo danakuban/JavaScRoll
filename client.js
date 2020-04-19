@@ -2,6 +2,7 @@ const Player = require('./roleFramework/player.js');
 let ClientSyncRole = require('./clientSyncRole.js');
 
 const client = new Player();
+client.entryPoint = "entryPoint";
 client.plays(ClientSyncRole); //TODO: Constraint: has method update?
 client.connect();
 client.update = function() {
@@ -53,7 +54,7 @@ function addCheckedListener() {
 
 function addAddButtonListener() {
     let addButton = document.getElementById("add");
-    addButton.addEventListener('click', function (ev) {
+    addButton.addEventListener('click', function () {
         const li = document.createElement("li");
         const inputValue = document.getElementById("myInput").value;
         const t = document.createTextNode(inputValue);
@@ -61,7 +62,7 @@ function addAddButtonListener() {
         if (inputValue === '') {
             alert("You must write something!");
         } else {
-            document.getElementById("root").appendChild(li);
+            document.getElementsByTagName("UL")[0].appendChild(li);
         }
         document.getElementById("myInput").value = "";
     });

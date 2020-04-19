@@ -1,9 +1,11 @@
 const ShareDB = require('sharedb');
 const WebSocket = require('ws');
 const WebSocketJSONStream = require('@teamwork/websocket-json-stream');
-const json = require('ot-json1');
+const json = require('ot-json0');
 const Role = require("./roleFramework/role");
 const ServerSyncCompartment = require("./ServerSyncCompartment");
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
 
 ServerSyncRole = new Role("ServerSyncRole");
 serverSyncCompartment = new ServerSyncCompartment();
@@ -30,64 +32,16 @@ ServerSyncRole.startSync = function () {
     docCounter.fetch(function (err) {
         if (err) throw err;
         if (docCounter.type === null) {
-            docCounter.create({counter: 7});
+            docCounter.create({counter: 0});
         }
     });
     let doc = connection.get('json', 'tree');
     doc.fetch(function (err) {
         if (err) throw err;
         if (doc.type === null) {
-            doc.create({
-                root: {
-                    type: 'ul', children: [
-                        {
-                            1: {
-                                type: 'li',
-                                attributes: [{draggable: 'true'}],
-                                children: [{
-                                    4: {
-                                        type: 'span',
-                                        children: [],
-                                        attributes: [{class: 'close'}],
-                                        value: 'x'
-                                    }
-                                }],
-                                value: 'drink water'
-                            }
-                        },
-                        {
-                            2: {
-                                type: 'li',
-                                attributes: [{draggable: 'true'}],
-                                value: 'do sports',
-                                children: [{
-                                    5: {
-                                        type: 'span',
-                                        children: [],
-                                        attributes: [{class: 'close'}],
-                                        value: 'x'
-                                    }
-                                }]
-                            }
-                        },
-                        {
-                            3: {
-                                type: 'li',
-                                attributes: [{draggable: 'true', class: 'checked'}],
-                                value: 'do DA',
-                                children: [{
-                                    6: {
-                                        type: 'span',
-                                        children: [],
-                                        attributes: [{class: 'close'}],
-                                        value: 'x'
-                                    }
-                                }]
-                            }
-                        }
-                    ]
-                }
-            });
+            let dom = new JSDOM("<div id='root'>" + that.initDomString  + "</div>");
+            let jsonObject = parseHtmlToJson(dom.window.document.getElementById("root"), docCounter);
+            doc.create(jsonObject);
         }
     });
 };
@@ -95,21 +49,31 @@ ServerSyncRole.startSync = function () {
 /**
  * @returns JSONObject
  */
-parseHtmlToJson = function (element, json) {
-    console.log(element);
+parseHtmlToJson = function (element, docCounter) {
+    let json = {};
+    if (element.id == null || element.id === "") {
+        element.id = docCounter.data.counter;
+        docCounter.submitOp([{p: ['counter'], na: 1}])
+    }
+    let value = "";
+    if (element.firstChild != null && element.firstChild.nodeValue != null) value = element.firstChild.nodeValue;
     json[element.id] = {
         'type': element.nodeName,
-        'value': element.firstChild.nodeValue,
+        'value': value,
         'children': [],
         'attributes': [{}]
     };
     if (element.className !== "") json[element.id]["attributes"][0]["class"] = element.className;
-    for (let attribute in element.attributes) {
-        json[element.id]["attributes"][0][attribute] = element.attributes[attribute];
+    if (element.className != null) {
+        json[element.id]["attributes"][0]["class"] = element.className;
     }
-    for (let i = 0; i < element.childNodes.length; i++) {
-        let child = element.childNodes[i];
-        json[element.id]["children"][i] = parseHtmlToJson(child);
+
+    if (element.childNodes != null) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+            let child = element.childNodes[i];
+            if (child.nodeName === "#text") continue;
+            json[element.id]["children"][i] = parseHtmlToJson(child, docCounter);
+        }
     }
     return json;
 };

@@ -20,12 +20,13 @@
     "deltajs": "0.0.6",
     "dom-parser": "^0.1.6",
     "express": "^4.17.1",
+    "jsdom": "^16.2.2",
     "mocha": "^7.1.1",
+    "ot-json0": "latest",
     "reconnecting-websocket": "^4.2.0",
     "sharedb": "^1.0.0-beta",
     "ws": "^7.2.0",
-    "xml": "^1.0.1",
-    "ot-json0": "latest"
+    "xml": "^1.0.1"
   },
   "devDependencies": {
     "browserify": "^16.5.0"
