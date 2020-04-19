@@ -5,7 +5,7 @@ function enableNoSuchMethod(obj) {
                 return target[p];
             } else if (typeof target.__noSuchMethod__ === "function") {
                 //console.log(obj);
-                if (typeof(obj.player) !== "undefined" && obj.player != null) {
+                if (typeof (obj.player) !== "undefined" && obj.player != null) {
                     if (p in obj.player) {
                         return obj.player[p];
                     }
@@ -31,10 +31,20 @@ class Player {
     }
 
     plays(role) {
+        this.checkPlaysCycle(role);
         this.drops(role);
         if (role.compartment != null) role.compartment.validate(this, role);
         this.roles.push(role);
+
+        // update reverse links
+        if (this.playerList != null) this.playerList.forEach(p => role.playerList.push(p));
+        role.playerList.push(this);
         role.player = this;
+    }
+
+    checkPlaysCycle(role) {
+        if (this.playerList == null || !Array.isArray(this.playerList)) return;
+        this.playerList.forEach(p => { if (p === role) throw new Error('cyclic plays relation detected!'); });
     }
 
     drops(role) {

@@ -9,6 +9,7 @@ const Constraint = require("./roleFramework/constraint");
 
 ServerSyncRole = new Role("ServerSyncRole");
 ServerSyncComparment = new Compartment("ServerSyncCompartment");
+// TODO: in vererbtes Compartment auslagern
 ServerSyncComparment.addRole(ServerSyncRole);
 ServerSyncRoleGroup = new RoleGroup("ServerSyncRoleGroup", ServerSyncRole);
 ServerSyncComparment.addRoleGroup(ServerSyncRoleGroup);
@@ -48,7 +49,7 @@ ServerSyncRole.startSync = function () {
                         {
                             1: {
                                 type: 'li',
-                                attributes: [{}],
+                                attributes: [{draggable: 'true'}],
                                 children: [{
                                     4: {
                                         type: 'span',
@@ -63,7 +64,7 @@ ServerSyncRole.startSync = function () {
                         {
                             2: {
                                 type: 'li',
-                                attributes: [{}],
+                                attributes: [{draggable: 'true'}],
                                 value: 'do sports',
                                 children: [{
                                     5: {
@@ -78,7 +79,7 @@ ServerSyncRole.startSync = function () {
                         {
                             3: {
                                 type: 'li',
-                                attributes: [{}],
+                                attributes: [{draggable: 'true', class: 'checked'}],
                                 value: 'do DA',
                                 children: [{
                                     6: {
@@ -114,7 +115,7 @@ parseHtmlToJson = function (element, json) {
     }
     for (let i = 0; i < element.childNodes.length; i++) {
         let child = element.childNodes[i];
-        json[element.id]["children"][i] = ServerSyncRole.parseHtmlToJson(child);
+        json[element.id]["children"][i] = parseHtmlToJson(child);
     }
     return json;
 };

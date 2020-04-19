@@ -59,7 +59,9 @@ ClientSyncRole.connect = function () {
                         'children': [],
                         'attributes': [{}]
                     };
-                    if (addedNode.className !== "") newNode[addedNode.id]["attributes"][0]["class"] = addedNode.className;
+                    for (let attribute in addedNode.attributes) {
+                        newNode[addedNode.id]["attributes"][0][attribute] = addedNode.attributes[attribute];
+                    }
                     if (addedNode.nextElementSibling != null) {
                         console.trace("there is a next sibling");
                         index = path.reduce((o, n) => o[n], docJson.data).findIndex(function (item) {
@@ -99,7 +101,7 @@ ClientSyncRole.connect = function () {
                     let op = {p: path, ld: path.reduce((o, n) => o[n], docJson.data)};
                     docJson.submitOp(op);
                 }
-                if (mutation.type === "attributes" && mutation.attributeName === "class") {
+                if (mutation.type === "attributes") {
                     let path = [getIndex(mutation.target), mutation.target.id];
                     let node = mutation.target;
                     while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
@@ -109,9 +111,18 @@ ClientSyncRole.connect = function () {
                     //TODO: create object if not present
                     path.push("attributes");
                     path.push(0);
-                    path.push("class");
-                    let op = {p: path, oi: mutation.target.className};
+                    let attributes = path.reduce((o, n) => o[n], docJson.data);
+                    let attributeName = mutation.attributeName;
+                    let attributeValue = mutation.target.getAttribute(attributeName);
+                    if (attributes.hasOwnProperty(attributeName) && attributes[attributeName] === attributeValue) {
+                        console.trace("node has correct attribute");
+                        return;
+                    }
+                    // todo: attribute might change
+                    path.push(attributeName);
+                    let op = {p: path, oi: attributeValue};
                     docJson.submitOp(op);
+                    console.log(docJson.data);
                 }
             });
         });
@@ -181,6 +192,7 @@ jsonToDom = function (json) {
         if (json[id].hasOwnProperty("attributes") && json[id]["attributes"].length > 0) {
             let attributes = json[id]["attributes"][0];
             Object.keys(attributes).forEach(function (key) {
+                if (attributes[key] === "") return;
                 xml = xml.concat(" ", key, "=\"", attributes[key], "\"");
             });
         }

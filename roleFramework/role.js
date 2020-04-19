@@ -5,6 +5,7 @@ class Role extends Player {
     constructor(name) {
         super();
         this.name = name;
+        this.playerList = [];
         this.player = null;
         this.compartment = null;
     }
