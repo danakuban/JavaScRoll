@@ -13,6 +13,10 @@ class ClientSyncCompartment extends Compartment {
 
     addRole(role) {
         super.addRole(role);
+    }
+
+    addRoleWithConstraint(role) {
+        super.addRole(role);
         this.roleGroups.forEach(rg => { if (rg.name === "ClientSyncRoleGroup") rg.addRole(role) });
     }
 }

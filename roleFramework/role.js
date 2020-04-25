@@ -10,12 +10,24 @@ class Role extends Player {
         this.compartment = null;
     }
 
-    __noSuchMethod__(id, args) {
+    /**
+     * override this method to execute code right after this role is played by a player
+     */
+    postPlayed() {
+    }
+
+    /**
+     * override this method to execute code right after this role is dropped by a player
+     */
+    postDropped() {
+    }
+
+    __noSuchMethod__(id, ...args) {
         console.log("tried to handle unknown method " + id);
         for (const role of this.roles) {
             try {
-                console.log("found method " + id + " in role " + role.name);
-                return role[id](args);
+                console.log("look for method " + id + " in role " + role.name);
+                return role[id](...args);
             } catch(err) {
                 console.log("could not find a method with name " + id + " in any role of this object");
             }

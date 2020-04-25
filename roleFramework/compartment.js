@@ -1,4 +1,5 @@
 const Player = require('./player.js');
+const RoleGroup = require('./roleGroup.js');
 
 class Compartment extends Player {
 
@@ -20,6 +21,18 @@ class Compartment extends Player {
         // TODO: check if all roles in this group are in the compartment itself
         // TODO: only add empty roleGroups?
         this.roleGroups.push(roleGroup);
+    }
+
+    /**
+     * @returns RoleGroup
+     */
+    creatRoleGroup(name, roles, constraint) {
+        let roleGroup = new RoleGroup(name)
+        if (Array.isArray(roles)) roles.forEach(r => roleGroup.addRole(r));
+        else roleGroup.addRole(roles);
+        roleGroup.addConstraint(constraint);
+        this.addRoleGroup(roleGroup);
+        return roleGroup;
     }
 
     validate(player, role) {

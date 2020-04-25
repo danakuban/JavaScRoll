@@ -16,7 +16,7 @@ server.startServer = function() {
     return server;
 };
 
-server.initDomString = "<ul><li draggable='true'>drink water</li><li>do sports</li><li>do DA</li></ul>";
+server.initDomString = "<ul><li>drink water</li><li>do sports</li><li>do DA</li></ul>";
 
 server.plays(serverSyncRole);
 server.startSync();

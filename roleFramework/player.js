@@ -4,7 +4,6 @@ function enableNoSuchMethod(obj) {
             if (p in target) {
                 return target[p];
             } else if (typeof target.__noSuchMethod__ === "function") {
-                //console.log(obj);
                 if (typeof (obj.player) !== "undefined" && obj.player != null) {
                     if (p in obj.player) {
                         return obj.player[p];
@@ -16,7 +15,7 @@ function enableNoSuchMethod(obj) {
                     }
                 }
                 return function (...args) {
-                    return target.__noSuchMethod__.call(target, p, args);
+                    return target.__noSuchMethod__.call(target, p, ...args);
                 };
             }
         }
@@ -31,8 +30,9 @@ class Player {
     }
 
     plays(role) {
-        this.checkPlaysCycle(role);
-        this.drops(role);
+        this.checkPlaysCycleBackwards(role);
+        this.checkPlaysCycleForwards(role);
+
         if (role.compartment != null) role.compartment.validate(this, role);
         this.roles.push(role);
 
@@ -40,9 +40,18 @@ class Player {
         if (this.playerList != null) this.playerList.forEach(p => role.playerList.push(p));
         role.playerList.push(this);
         role.player = this;
+
+        role.postPlayed();
     }
 
-    checkPlaysCycle(role) {
+    checkPlaysCycleForwards(role) {
+        if (this.roles.includes(role)) throw new Error("player plays this role already");
+        for (let roleToCheck of this.roles) {
+            roleToCheck.checkPlaysCycleForwards(role);
+        }
+    }
+
+    checkPlaysCycleBackwards(role) {
         if (this.playerList == null || !Array.isArray(this.playerList)) return;
         this.playerList.forEach(p => { if (p === role) throw new Error('cyclic plays relation detected!'); });
     }
@@ -51,14 +60,15 @@ class Player {
         console.log(role.name);
         this.roles = this.roles.filter(item => item !== role);
         role.player = null;
+        role.postDropped();
     }
 
-    __noSuchMethod__(id, args) {
+    __noSuchMethod__(id, ...args) {
         console.log("tried to handle unknown method " + id);
         for (const role of this.roles) {
             try {
                 console.log("found method " + id + " in role " + role.name);
-                return role[id](args);
+                return role[id](...args);
             } catch (err) {
                 console.log("could not find a method with name " + id + " in role " + role.name);
             }

@@ -11,12 +11,8 @@ console.log("start constraintValidationTest");
 const role = new Role("role");
 const compartment = new Compartment("compartment");
 compartment.addRole(role);
-const roleGroup = new RoleGroup("roleGroup", role);
-compartment.addRoleGroup(roleGroup);
-const constraint = new Constraints.MethodImplementedConstraint("method");
-roleGroup.addConstraint(constraint);
-// TODO: shortcut for compartment with one role and constraint?
-// TODO: method from role
+let constraint = new Constraints.MethodImplementedConstraint("method");
+let roleGroup = compartment.creatRoleGroup("roleGroup", role, constraint);
 
 const player = new Player();
 expect(function(){ player.plays(role) }).to.throw('player has no method method defined');
