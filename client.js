@@ -3,9 +3,20 @@ let ClientSyncRole = require('./clientSyncRole.js');
 
 const client = new Player();
 client.entryPoint = "entryPoint";
-client.plays(ClientSyncRole); //TODO: Constraint: has method update?
-client.connect();
-client.update = function() {
+client.plays(ClientSyncRole.ClientSyncRoleRead);
+client.plays(ClientSyncRole.ClientSyncRoleWrite);
+client.plays(ClientSyncRole.ClientSyncRoleOfflineStack);
+
+let toggleSyncWriteButton = document.getElementById("toggleSyncWrite");
+toggleSyncWriteButton.addEventListener('click', function () {
+    if (toggleSyncWriteButton.checked) {
+        client.plays(ClientSyncRole.ClientSyncRoleWrite);
+    } else {
+        client.drops(ClientSyncRole.ClientSyncRoleWrite);
+    }
+});
+
+client.update = function () {
     createCloseButtons();
     addCloseListener();
     addCheckedListener();
@@ -70,6 +81,7 @@ function addAddButtonListener() {
 
 // drag and drop
 var srcId = null;
+
 function handleDragStart(e) {
     // store source index
     srcId = e.target.id;
