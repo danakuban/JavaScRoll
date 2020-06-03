@@ -24,7 +24,8 @@ function enableNoSuchMethod(obj) {
 
 class Player {
 
-    constructor() {
+    constructor(name) {
+        this.name = name;
         this.roles = [];
         return enableNoSuchMethod(this);
     }
@@ -33,7 +34,7 @@ class Player {
         this.checkPlaysCycleBackwards(role);
         this.checkPlaysCycleForwards(role);
 
-        if (role.compartment != null) role.compartment.validate(this, role);
+        for (let compartment of role.compartments) compartment.validate(this, role);
         this.roles.push(role);
 
         // update reverse links

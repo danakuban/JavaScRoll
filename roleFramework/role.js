@@ -3,11 +3,10 @@ const Player = require('./player.js');
 class Role extends Player {
 
     constructor(name) {
-        super();
-        this.name = name;
+        super(name);
         this.playerList = [];
         this.player = null;
-        this.compartment = null;
+        this.compartments = [];
     }
 
     /**

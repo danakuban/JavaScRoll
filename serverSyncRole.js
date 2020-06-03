@@ -11,7 +11,7 @@ ServerSyncRole = new Role("ServerSyncRole");
 serverSyncCompartment = new ServerSyncCompartment();
 serverSyncCompartment.addRole(ServerSyncRole);
 
-ServerSyncRole.startSync = function () {
+ServerSyncRole.postPlayed = function () {
 
     ShareDB.types.register(json.type);
     this.backend = new ShareDB();

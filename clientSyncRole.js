@@ -29,20 +29,6 @@ ClientSyncRole.postPlayed = function () {
     this.docJson = this.connection.get('json', 'tree');
 };
 
-ClientSyncRole.moveListItemById = function (srcId, targetId) {
-    let path = [];
-    let node = document.getElementById(targetId);
-    while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
-        path.unshift(node.id, "children");
-        if (node.parentNode != null && node.parentNode.id !== this.entryPoint) path.unshift(getIndex(node));
-    }
-    let srcIndex = getIndex(document.getElementById(srcId));
-    let targetIndex = getIndex(document.getElementById(targetId));
-    path.push(srcIndex);
-    const docJson = this.connection.get('json', 'tree');
-    docJson.submitOp({p: path, lm: targetIndex});
-};
-
 let ClientSyncRoleWrite = new Role("ClientSyncRoleWrite");
 clientSyncCompartment.addRoleWithConstraint(ClientSyncRoleWrite);
 ClientSyncRoleWrite.plays(ClientSyncRole);
@@ -65,7 +51,7 @@ ClientSyncRoleWrite.postPlayed = function() {
     this.docJson.subscribe(function (err) {
         if (err) throw err;
         window.document.getElementById(that.entryPoint).innerHTML = jsonToDom(that.docJson.data);
-        that.update();
+        try { that.update() } catch (err) { console.info("client has no update method"); }
 
         // we do these tries and catches because we cannot be sure that the client plays both roles (may be a constraint)
         try {
@@ -93,6 +79,20 @@ ClientSyncRoleWrite.postPlayed = function() {
 ClientSyncRoleWrite.postDropped = function() {
     this.observer.disconnect();
 }
+
+ClientSyncRoleWrite.moveListItemById = function (srcId, targetId) {
+    let path = [];
+    let node = document.getElementById(targetId);
+    while ((node = node.parentNode) && (node.id !== 'entryPoint')) {
+        path.unshift(node.id, "children");
+        if (node.parentNode != null && node.parentNode.id !== this.entryPoint) path.unshift(getIndex(node));
+    }
+    let srcIndex = getIndex(document.getElementById(srcId));
+    let targetIndex = getIndex(document.getElementById(targetId));
+    path.push(srcIndex);
+    const docJson = this.connection.get('json', 'tree');
+    docJson.submitOp({p: path, lm: targetIndex});
+};
 
 let ClientSyncRoleRead = new Role("ClientSyncRoleRead");
 clientSyncCompartment.addRoleWithConstraint(ClientSyncRoleRead);

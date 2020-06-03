@@ -19,4 +19,3 @@ server.startServer = function() {
 server.initDomString = "<ul><li>drink water</li><li>do sports</li><li>do DA</li></ul>";
 
 server.plays(serverSyncRole);
-server.startSync();
